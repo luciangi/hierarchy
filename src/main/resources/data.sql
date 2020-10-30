@@ -1,0 +1,2 @@
+INSERT INTO USER (ID, PASSWORD, USERNAME) VALUES
+    (1, '$2a$11$.Lfzloc0QSgebPcFLH545.fks3MT9wmmArmJeFQqBkP1ZxmON8d0i', 'personia');
