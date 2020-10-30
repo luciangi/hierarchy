@@ -14,7 +14,6 @@ import org.springframework.security.crypto.password.PasswordEncoder
 
 @EnableWebSecurity
 class SecurityConfig(@Autowired private val userDetailsService: UserDetailsService) : WebSecurityConfigurerAdapter() {
-    @Throws(Exception::class)
     override fun configure(http: HttpSecurity) {
         http {
             httpBasic {}
@@ -32,7 +31,6 @@ class SecurityConfig(@Autowired private val userDetailsService: UserDetailsServi
         }
     }
 
-    @Throws(Exception::class)
     override fun configure(auth: AuthenticationManagerBuilder) {
         auth.userDetailsService(userDetailsService)
                 .passwordEncoder(encoder())

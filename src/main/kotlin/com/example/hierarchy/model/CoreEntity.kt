@@ -5,7 +5,7 @@ import javax.persistence.Id
 import javax.persistence.MappedSuperclass
 
 @MappedSuperclass
-class CoreEntity(@Id @GeneratedValue val id: Long? = null) {
+abstract class CoreEntity(@Id @GeneratedValue val id: Long? = null) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
 
