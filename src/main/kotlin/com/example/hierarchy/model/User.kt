@@ -7,7 +7,7 @@ import javax.persistence.Entity
 import javax.validation.constraints.NotBlank
 
 @Entity
-data class User(
+class User(
         @Column(unique = true, nullable = false) @NotBlank val username: String,
         @Column(nullable = false) @NotBlank @Length(min = 5) @Transient val password: String
 ) : CoreEntity()

@@ -13,7 +13,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 
 @EnableWebSecurity
-class SecurityConfig(@Autowired private val userDetailsService: UserDetailsService) : WebSecurityConfigurerAdapter() {
+class SecurityConfig : WebSecurityConfigurerAdapter() {
+    @Autowired
+    private lateinit var userDetailsService: UserDetailsService
+
     override fun configure(http: HttpSecurity) {
         http {
             httpBasic {}
