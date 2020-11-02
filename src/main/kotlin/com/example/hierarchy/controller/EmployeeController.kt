@@ -25,7 +25,7 @@ class EmployeeController(
         val rootEmployee = employeeService.buildEmployeeHierarchy(requestData)
         val savedEmployee = employeeService.saveEmployeeHierarchy(rootEmployee)
 
-        return employeeService.employeesToMap(listOf(savedEmployee))
+        return employeeService.employeesToHierarchyMap(listOf(savedEmployee))
     }
 
     @GetMapping(produces = [APPLICATION_JSON_VALUE])

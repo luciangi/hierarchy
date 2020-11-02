@@ -15,7 +15,7 @@ import java.util.stream.Stream
 internal class EmployeeRepositoryTestIT(@Autowired private val employeeRepository: EmployeeRepository) {
     companion object {
         @JvmStatic
-        fun provideEmployeeNamesForGetSupervisorsShouldReturnAppropriateResult(): Stream<Arguments?>? {
+        fun provideEmployeeNamesForGetSupervisorsShouldReturnCorrectResult(): Stream<Arguments?>? {
             return Stream.of(
                     Arguments.of("employeeName", "supervisorName", "supervisorsSupervisorName"),
                     Arguments.of("employeeName", "supervisorName", null),
@@ -47,8 +47,8 @@ internal class EmployeeRepositoryTestIT(@Autowired private val employeeRepositor
      * then it returns the employee projection
      */
     @ParameterizedTest
-    @MethodSource("provideEmployeeNamesForGetSupervisorsShouldReturnAppropriateResult")
-    fun getSupervisorsShouldReturnAppropriateResult(employeeName: String, supervisorName: String?, supervisorsSupervisorName: String?) {
+    @MethodSource("provideEmployeeNamesForGetSupervisorsShouldReturnCorrectResult")
+    fun getSupervisorsShouldReturnCorrectResult(employeeName: String, supervisorName: String?, supervisorsSupervisorName: String?) {
         // Given
         val savedSupervisorsSupervisor = if (supervisorsSupervisorName == null) null else Employee(supervisorsSupervisorName, null)
         val savedSupervisor = if (supervisorName == null) null else Employee(supervisorName, savedSupervisorsSupervisor)

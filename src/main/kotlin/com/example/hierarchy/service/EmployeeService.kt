@@ -29,8 +29,8 @@ class EmployeeService(@Autowired private val employeeRepository: EmployeeReposit
         return employeeRepository.save(rootEmployee)
     }
 
-    fun employeesToMap(employee: List<Employee>): Map<String, Any> {
-        return employee.associateBy({ it.name }) { employeesToMap(it.subordinates) }
+    fun employeesToHierarchyMap(employee: List<Employee>): Map<String, Any> {
+        return employee.associateBy({ it.name }) { employeesToHierarchyMap(it.subordinates) }
     }
 
     private fun findRootEmployee(employees: List<Employee>): Employee {
