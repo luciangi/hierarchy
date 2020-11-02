@@ -2,17 +2,22 @@ package com.example.hierarchy.service
 
 import com.example.hierarchy.model.User
 import com.example.hierarchy.repository.UserRepository
-import io.mockk.confirmVerified
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.BDDMockito.*
+import org.mockito.InjectMocks
+import org.mockito.Mock
+import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 
+@ExtendWith(MockitoExtension::class)
 internal class UserDetailsServiceTest {
-    private val userRepository = mockk<UserRepository>()
-    private val userDetailsService = UserDetailsService(userRepository)
+    @Mock
+    private lateinit var userRepository: UserRepository
+
+    @InjectMocks
+    private lateinit var userDetailsService: UserDetailsService
 
     /**
      * given a username that is not present in the userRepository
@@ -23,7 +28,7 @@ internal class UserDetailsServiceTest {
     fun loadUserByUsernameShouldThrowUsernameNotFoundException() {
         // Given
         val username = "invalidUsername"
-        every { userRepository.findByUsername(username) } returns null
+        given(userRepository.findByUsername(username)).willReturn(null)
 
         // When
         val exception: Exception = assertThrows(UsernameNotFoundException::class.java) {
@@ -31,8 +36,8 @@ internal class UserDetailsServiceTest {
         }
 
         // Then
-        verify(exactly = 1) { userRepository.findByUsername(username) }
-        confirmVerified(userRepository)
+        verify(userRepository, times(1)).findByUsername(username)
+        verifyNoMoreInteractions(userRepository)
 
         assertTrue(exception.message!!.contains(username))
     }
@@ -46,14 +51,14 @@ internal class UserDetailsServiceTest {
     fun loadUserByUsernameShouldReturnCorrectUserDetails() {
         // Given
         val user = User("username", "password")
-        every { userRepository.findByUsername(user.username) } returns user
+        given(userRepository.findByUsername(user.username)).willReturn(user)
 
         // When
         val userPrincipal = userDetailsService.loadUserByUsername(user.username)
 
         // Then
-        verify(exactly = 1) { userRepository.findByUsername(user.username) }
-        confirmVerified(userRepository)
+        verify(userRepository, times(1)).findByUsername(user.username)
+        verifyNoMoreInteractions(userRepository)
 
         assertEquals(userPrincipal.username, user.username)
         assertEquals(userPrincipal.password, user.password)

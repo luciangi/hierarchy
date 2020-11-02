@@ -1,5 +1,6 @@
 package com.example.hierarchy.controller
 
+import com.example.hierarchy.exception.EmployeeNotFoundException
 import com.example.hierarchy.projection.EmployeeProjection
 import com.example.hierarchy.repository.EmployeeRepository
 import com.example.hierarchy.service.EmployeeService
@@ -27,8 +28,9 @@ class EmployeeController(
         return employeeService.employeesToMap(listOf(savedEmployee))
     }
 
-    @GetMapping
+    @GetMapping(produces = [APPLICATION_JSON_VALUE])
     fun getEmployee(@RequestParam("name") name: String): EmployeeProjection? {
         return employeeRepository.getEmployeeSuperiors(name)
+                ?: throw EmployeeNotFoundException("Cannot find employee with name: $name")
     }
 }

@@ -1,19 +1,34 @@
 package com.example.hierarchy.controller
 
+import com.example.hierarchy.projection.EmployeeProjection
+import com.example.hierarchy.repository.EmployeeRepository
+import com.example.hierarchy.service.EmployeeService
+import org.hamcrest.core.StringContains
 import org.json.JSONObject
 import org.junit.jupiter.api.Test
+import org.mockito.BDDMockito.given
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import org.springframework.util.LinkedMultiValueMap
+
 
 @WebMvcTest(EmployeeController::class)
 //TODO: mock data
 internal class EmployeeControllerTestIT(@Autowired private val mockMvc: MockMvc) {
+    @MockBean
+    private lateinit var employeeService: EmployeeService
+
+    @MockBean
+    private lateinit var employeeRepository: EmployeeRepository
+
     /**
      * given an invalid circular employee hierarchy in a flat json
      * when executing a POST request on the "/employee/hierarchy" endpoint using the given payload
@@ -115,20 +130,21 @@ internal class EmployeeControllerTestIT(@Autowired private val mockMvc: MockMvc)
      */
     @Test
     @WithMockUser(username = "mock", password = "mock")
-    fun employeeEndpointShouldReturnNotFoundError() {
+    fun getEmployeeEndpointShouldReturnNotFoundError() {
         // Given
         val employeeName = "invalidName"
 
         // When
-        val response = mockMvc.perform(get("/employee")
-                .param("name", employeeName)
-                .accept(APPLICATION_JSON))
+        val response = mockMvc.get("/employee") {
+            accept = APPLICATION_JSON
+            params = LinkedMultiValueMap<String, String>(mapOf("name" to listOf(employeeName)))
+        }
 
         // Then
-        response.andExpect(status().isNotFound)
-                .andExpect(content().contentType(APPLICATION_JSON))
-                //    TODO: add proper message
-                .andExpect(jsonPath("$.message").value("Employee was not found"))
+        response.andExpect {
+            status { isNotFound }
+            jsonPath("$.message").value(StringContains(employeeName))
+        }
     }
 
     /**
@@ -138,25 +154,39 @@ internal class EmployeeControllerTestIT(@Autowired private val mockMvc: MockMvc)
      */
     @Test
     @WithMockUser(username = "mock", password = "mock")
-    fun employeeEndpointShouldReturnResponse() {
+    fun getEmployeeEndpointShouldReturnResponse() {
         // Given
         val employeeName = "Nick"
+        val supervisorName = "Sophie"
+        val supervisorsSupervisorName = "Jonas"
+        val employeeProjection: EmployeeProjection = SpelAwareProxyProjectionFactory()
+                .createProjection(EmployeeProjection::class.java)
+        employeeProjection.setName(employeeName)
+        employeeProjection.setSupervisor(supervisorName)
+        employeeProjection.setSupervisorsSupervisor(supervisorsSupervisorName)
+
+        given(employeeRepository.getEmployeeSuperiors(employeeName))
+                .willReturn(employeeProjection)
 
         // When
-        val response = mockMvc.perform(get("/employee")
-                .param("name", employeeName)
-                .accept(APPLICATION_JSON))
+        val response = mockMvc.get("/employee") {
+            accept = APPLICATION_JSON
+            params = LinkedMultiValueMap<String, String>(mapOf("name" to listOf(employeeName)))
+        }
 
         // Then
-        response.andExpect(status().isOk)
-                .andExpect(content().contentType(APPLICATION_JSON))
-                .andExpect(content()
-                        .json(JSONObject("""
+        response.andExpect {
+            status { isOk }
+            content { contentType(APPLICATION_JSON) }
+            content {
+                json(JSONObject("""
                             {
-                                "name": "Nick",
-                                "supervisor": "Sophie",
-                                "supervisorsSupervisor": "Jonas"
+                                "name": "$employeeName",
+                                "supervisor": "$supervisorName",
+                                "supervisorsSupervisor": "$supervisorsSupervisorName"
                             }
-                            """.trimIndent()).toString()))
+                            """.trimIndent()).toString())
+            }
+        }
     }
 }
