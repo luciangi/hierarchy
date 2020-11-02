@@ -28,7 +28,7 @@ class EmployeeController(
     }
 
     @GetMapping
-    fun getEmployee(@RequestParam("name") name: String): EmployeeProjection {
-        return employeeRepository.getSupervisors(name)
+    fun getEmployee(@RequestParam("name") name: String): EmployeeProjection? {
+        return employeeRepository.getEmployeeSuperiors(name)
     }
 }
