@@ -1,15 +1,14 @@
 package com.example.hierarchy.controller
 
+import org.json.JSONObject
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.security.test.context.support.WithMockUser
-import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
 @WebMvcTest(EmployeeController::class)
@@ -25,20 +24,19 @@ internal class EmployeeControllerTestIT(@Autowired private val mockMvc: MockMvc)
 //    TODO: check for multiple roots in the middle of the tree
     fun employeeHierarchyEndpointShouldReturnMultipleRootsError() {
         // Given
-        val employeeHierarchy = """
-                        {
-                            "Pete": "Nick",
-                            "Sophie": "Jonas"
-                        }
-                        """.trimIndent()
+        val hierarchy = JSONObject(mapOf(
+                "Pete" to "Nick",
+                "Sophie" to "Jonas"
+        ))
+
         // When
-        val result = mockMvc.perform(post("/employee/hierarchy")
+        val response = mockMvc.perform(post("/employee/hierarchy")
                 .contentType(APPLICATION_JSON)
-                .content(employeeHierarchy)
+                .content(hierarchy.toString())
                 .accept(APPLICATION_JSON))
 
         // Then
-        result.andExpect(status().isBadRequest)
+        response.andExpect(status().isBadRequest)
                 .andExpect(content().contentType(APPLICATION_JSON))
                 //    TODO: add proper message
                 .andExpect(jsonPath("$.message").value("Multiple roots"))
@@ -53,21 +51,19 @@ internal class EmployeeControllerTestIT(@Autowired private val mockMvc: MockMvc)
     @WithMockUser(username = "mock", password = "mock")
     fun employeeHierarchyEndpointShouldReturnCircularError() {
         // Given
-        val employeeHierarchy = """
-                        {
-                            "Pete": "Nick",
-                            "Nick": "Pete"
-                        }
-                        """.trimIndent()
+        val hierarchy = JSONObject(mapOf(
+                "Pete" to "Nick",
+                "Nick" to "Pete"
+        ))
 
         // When
-        val result = mockMvc.perform(post("/employee/hierarchy")
+        val response = mockMvc.perform(post("/employee/hierarchy")
                 .contentType(APPLICATION_JSON)
-                .content(employeeHierarchy)
+                .content(hierarchy.toString())
                 .accept(APPLICATION_JSON))
 
         // Then
-        result.andExpect(status().isBadRequest)
+        response.andExpect(status().isBadRequest)
                 .andExpect(content().contentType(APPLICATION_JSON))
                 //    TODO: add proper message
                 .andExpect(jsonPath("$.message").value("Circular payload"))
@@ -76,43 +72,40 @@ internal class EmployeeControllerTestIT(@Autowired private val mockMvc: MockMvc)
     /**
      * given a valid employee hierarchy in a flat json
      * when executing a POST request on the "/employee/hierarchy" endpoint using the given payload
-     * then the result is the employee hierarchy in a tree json
+     * then the response is the employee hierarchy in a tree json
      */
     @Test
     @WithMockUser(username = "mock", password = "mock")
-    fun employeeHierarchyEndpointShouldReturnResult() {
+    fun employeeHierarchyEndpointShouldReturnResponse() {
         // Given
-        val employeeHierarchy = """
-                        {
-                            "Pete": "Nick",
-                            "Barbara": "Nick",
-                            "Nick": "Sophie",
-                            "Sophie": "Jonas"
-                        }
-                        """.trimIndent()
+        val hierarchy = JSONObject(mapOf(
+                "Pete" to "Nick",
+                "Barbara" to "Nick",
+                "Nick" to "Sophie",
+                "Sophie" to "Jonas"
+        ))
 
         // When
-        val result = mockMvc.perform(post("/employee/hierarchy")
+        val response = mockMvc.perform(post("/employee/hierarchy")
                 .contentType(APPLICATION_JSON)
-                .content(employeeHierarchy)
+                .content(hierarchy.toString())
                 .accept(APPLICATION_JSON))
 
         // Then
-        result.andExpect(status().isOk)
+        val expectedResponseContent = JSONObject(mapOf(
+                "Jonas" to mapOf(
+                        "Sophie" to mapOf(
+                                "Nick" to mapOf(
+                                        "Pete" to emptyMap<String, String>(),
+                                        "Barbara" to emptyMap()
+                                )
+                        )
+                )
+        ))
+
+        response.andExpect(status().isOk)
                 .andExpect(content().contentType(APPLICATION_JSON))
-                .andExpect(content()
-                        .string("""
-                                {
-                                    "Jonas": {
-                                        "Sophie": {
-                                            "Nick": {
-                                                "Pete": {},
-                                                "Barbara": {}
-                                            }
-                                        }
-                                    }
-                                }
-                                """))
+                .andExpect(content().string(expectedResponseContent.toString()))
     }
 
     /**
@@ -127,12 +120,12 @@ internal class EmployeeControllerTestIT(@Autowired private val mockMvc: MockMvc)
         val employeeName = "invalidName"
 
         // When
-        val result = mockMvc.perform(get("/employee")
+        val response = mockMvc.perform(get("/employee")
                 .param("name", employeeName)
                 .accept(APPLICATION_JSON))
 
         // Then
-        result.andExpect(status().isNotFound)
+        response.andExpect(status().isNotFound)
                 .andExpect(content().contentType(APPLICATION_JSON))
                 //    TODO: add proper message
                 .andExpect(jsonPath("$.message").value("Employee was not found"))
@@ -141,29 +134,29 @@ internal class EmployeeControllerTestIT(@Autowired private val mockMvc: MockMvc)
     /**
      * given a valid employee name
      * when executing a GET request on the "/employee" endpoint using the given name
-     * then a result containing the supervisor name and the supervisor's supervisor name
+     * then a response containing the supervisor name and the supervisor's supervisor name
      */
     @Test
     @WithMockUser(username = "mock", password = "mock")
-    fun employeeEndpointShouldReturnResult() {
+    fun employeeEndpointShouldReturnResponse() {
         // Given
         val employeeName = "Nick"
 
         // When
-        val result = mockMvc.perform(get("/employee")
+        val response = mockMvc.perform(get("/employee")
                 .param("name", employeeName)
                 .accept(APPLICATION_JSON))
 
         // Then
-        result.andExpect(status().isOk)
+        response.andExpect(status().isOk)
                 .andExpect(content().contentType(APPLICATION_JSON))
                 .andExpect(content()
-                        .string("""
+                        .json(JSONObject("""
                             {
-                                "name": "Nick"
+                                "name": "Nick",
                                 "supervisor": "Sophie",
                                 "supervisorsSupervisor": "Jonas"
                             }
-                            """))
+                            """.trimIndent()).toString()))
     }
 }

@@ -9,7 +9,7 @@ class Employee(
         @NotBlank val name: String,
         @JoinColumn(name = "supervisor_id")
         @ManyToOne(cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
-        val supervisor: Employee,
+        var supervisor: Employee?,
         @OneToMany(mappedBy = "supervisor", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
-        val subordinates: List<Employee>
+        val subordinates: MutableList<Employee> = mutableListOf()
 ) : CoreEntity()
