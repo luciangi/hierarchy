@@ -22,28 +22,6 @@ internal class EmployeeServiceTest {
     private lateinit var employeeService: EmployeeService
 
     /**
-     * given an invalid circular employee hierarchy
-     * when calling buildEmployeeHierarchy
-     * then the method should throw an InvalidHierarchyException
-     */
-    @Test
-    fun buildEmployeeHierarchyShouldThrowExceptionForCircularError() {
-        // Given
-        val employeeNameToSupervisorName = mapOf(
-                "Pete" to "Nick",
-                "Nick" to "Pete"
-        )
-
-        // When
-        val exception: Exception = Assertions.assertThrows(InvalidHierarchyException::class.java) {
-            employeeService.buildEmployeeHierarchy(employeeNameToSupervisorName)
-        }
-
-        // Then
-        Assertions.assertTrue(exception.message == "")
-    }
-
-    /**
      * given an invalid employee hierarchy with multiple roots
      * when calling buildEmployeeHierarchy
      * then the method should throw an InvalidHierarchyException
@@ -62,7 +40,34 @@ internal class EmployeeServiceTest {
         }
 
         // Then
-        Assertions.assertTrue(exception.message == "")
+        Assertions.assertNotNull(exception.message)
+        employeeNameToSupervisorName.values.forEach {
+            Assertions.assertTrue(exception.message!!.contains(it))
+        }
+    }
+
+    /**
+     * given an invalid employee hierarchy with no roots
+     * when calling buildEmployeeHierarchy
+     * then the method should throw an InvalidHierarchyException
+     */
+    @Test
+    fun buildEmployeeHierarchyShouldThrowExceptionForNoRootsError() {
+        // Given
+        val employeeNameToSupervisorName = mapOf(
+                "Jonas" to "Barbara",
+                "Barbara" to "Nick",
+                "Nick" to "Sophie",
+                "Sophie" to "Jonas"
+        )
+
+        // When
+        val exception: Exception = Assertions.assertThrows(InvalidHierarchyException::class.java) {
+            employeeService.buildEmployeeHierarchy(employeeNameToSupervisorName)
+        }
+
+        // Then
+        Assertions.assertNotNull(exception.message)
     }
 
     /**

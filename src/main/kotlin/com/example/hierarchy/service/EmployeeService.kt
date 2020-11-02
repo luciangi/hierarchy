@@ -1,5 +1,6 @@
 package com.example.hierarchy.service
 
+import com.example.hierarchy.exception.InvalidHierarchyException
 import com.example.hierarchy.model.Employee
 import com.example.hierarchy.repository.EmployeeRepository
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,7 +21,18 @@ class EmployeeService(@Autowired private val employeeRepository: EmployeeReposit
                     return@fold acc
                 }
 
-        return findRootEmployee(nameToEmployee.values.toList())
+        val employeesWithoutSupervisor = nameToEmployee.values.toList().filter { it.supervisor == null }
+
+        if (employeesWithoutSupervisor.size > 1) {
+            throw InvalidHierarchyException("Multiple roots were found. The following employees " +
+                    "${employeesWithoutSupervisor.map { it.name }} do not have a supervisor")
+        }
+        if (employeesWithoutSupervisor.isEmpty()) {
+            throw InvalidHierarchyException("The hierarchy contains a loop. No roots were found. " +
+                    "At least one employee should not have a supervisor.")
+        }
+
+        return employeesWithoutSupervisor.first()
     }
 
     @Transactional
@@ -31,9 +43,5 @@ class EmployeeService(@Autowired private val employeeRepository: EmployeeReposit
 
     fun employeesToHierarchyMap(employee: List<Employee>): Map<String, Any> {
         return employee.associateBy({ it.name }) { employeesToHierarchyMap(it.subordinates) }
-    }
-
-    private fun findRootEmployee(employees: List<Employee>): Employee {
-        return employees.find { it.supervisor == null }!!
     }
 }
