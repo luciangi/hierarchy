@@ -131,12 +131,12 @@ internal class EmployeeServiceTest {
         // Then
         verify(employeeRepository, times(1)).deleteAll()
         verify(employeeRepository, times(1)).save(employee)
+        verify(employeeRepository, times(1)).flush()
         verifyNoMoreInteractions(employeeRepository)
 
         assertEquals(savedEmployee.name, employee.name)
     }
 
-    //TODO: circular check?
     /**
      * given a valid employee hierarchy
      * when calling employeesToHierarchyMap

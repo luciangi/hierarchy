@@ -11,12 +11,12 @@ import org.springframework.transaction.annotation.Transactional
 class EmployeeService(@Autowired private val employeeRepository: EmployeeRepository) {
     fun buildEmployeeHierarchy(employeeNameToSupervisorName: Map<String, String>): Employee {
         val nameToEmployee = employeeNameToSupervisorName.entries
-                .fold(mutableMapOf<String, Employee>()) { acc, entry ->
-                    acc.putIfAbsent(entry.key, Employee(entry.key, null))
-                    acc.putIfAbsent(entry.value, Employee(entry.value, null))
+                .fold(mutableMapOf<String, Employee>()) { acc, (employeeName, supervisorName) ->
+                    acc.putIfAbsent(employeeName, Employee(employeeName, null))
+                    acc.putIfAbsent(supervisorName, Employee(supervisorName, null))
 
-                    acc[entry.key]!!.supervisor = acc[entry.value]
-                    acc[entry.value]!!.subordinates.add(acc[entry.key]!!)
+                    acc[employeeName]!!.supervisor = acc[supervisorName]
+                    acc[supervisorName]!!.subordinates.add(acc[employeeName]!!)
 
                     return@fold acc
                 }
@@ -24,7 +24,7 @@ class EmployeeService(@Autowired private val employeeRepository: EmployeeReposit
         val employeesWithoutSupervisor = nameToEmployee.values.toList().filter { it.supervisor == null }
 
         if (employeesWithoutSupervisor.size > 1) {
-            throw InvalidHierarchyException("Multiple roots were found. The following employees " +
+            throw InvalidHierarchyException("Multiple roots were found. The following employees: " +
                     "${employeesWithoutSupervisor.map { it.name }} do not have a supervisor")
         }
         if (employeesWithoutSupervisor.isEmpty()) {
@@ -38,6 +38,7 @@ class EmployeeService(@Autowired private val employeeRepository: EmployeeReposit
     @Transactional
     fun saveEmployeeHierarchy(rootEmployee: Employee): Employee {
         employeeRepository.deleteAll()
+        employeeRepository.flush()
         return employeeRepository.save(rootEmployee)
     }
 

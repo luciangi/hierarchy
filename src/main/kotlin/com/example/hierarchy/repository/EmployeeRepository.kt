@@ -2,10 +2,10 @@ package com.example.hierarchy.repository
 
 import com.example.hierarchy.model.Employee
 import com.example.hierarchy.projection.EmployeeProjection
+import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
-import org.springframework.data.repository.CrudRepository
 
-interface EmployeeRepository : CrudRepository<Employee, Long> {
+interface EmployeeRepository : JpaRepository<Employee, Long> {
     @Query("""
         SELECT e1.name as name,
                e2.name as supervisor,
