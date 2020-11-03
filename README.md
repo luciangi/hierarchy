@@ -46,7 +46,7 @@ These scripts will add a new user that can be used to access the endpoints using
 Since the password is encoded in the data.sql here is the username/password needed to access the API:
 ```
 username: personia
-password: personia
+password: password
 ```    
 
 ### Curl requests
