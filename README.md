@@ -74,6 +74,7 @@ curl -u personia:password -i -XGET -H "Content-type: application/json" 'http://l
 For further reference, please consider the following sections:
 
 * [Gradle](https://gradle.org/)
+* [Kotlin](https://kotlinlang.org/)
 * [Spring Boot](https://spring.io/projects/spring-boot)
     * [Spring Boot Starter Web](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web)
     * [Spring Boot Starter Actuators](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-actuator)
